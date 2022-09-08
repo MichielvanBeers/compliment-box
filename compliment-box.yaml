@@ -1,0 +1,63 @@
+esphome:
+  name: compliment-wall
+  platform: ESP8266
+  board: esp01_1m
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  password: # Create your password here
+
+wifi:
+  ssid: # Fill in your network name here 
+  password: # Fill in your network password here
+  output_power: 14
+  fast_connect: true
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Compliment-Wall Fallback Hotspot"
+    password: # Add your password here
+    
+web_server:
+  port: 80
+
+# MP3 Rx <---YELLOW---> Esp (Tx), D6 (GPIO 12)   
+# MP3 Tx <---ORANGE---> Esp (Rx), D7 (GPIO 13)
+
+uart:
+  tx_pin: 12 # Pin D6 on NodeMCU board
+  rx_pin: 13 # Pin D7 on NodeMCU board
+  baud_rate: 9600
+  
+time:
+  - platform: sntp
+    on_time:
+      # Set volume to max to prevent the MP3 player from going into a sleep state
+      - seconds: /30
+        then:
+          - dfplayer.set_volume: 28
+          - logger.log: 'Set volume to max'
+
+captive_portal:
+
+binary_sensor:
+  - platform: gpio
+    name: "PIR Sensor"
+    pin:
+      number: 14
+      mode: INPUT_PULLUP
+      inverted: False
+    on_press:
+      then:
+        - dfplayer.play_next:
+        - logger.log: 'Sent play next command'
+
+dfplayer:
+  on_finished_playback:
+    then:
+      - logger.log: 'Finished playing compliment'
